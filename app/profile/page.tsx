@@ -6,11 +6,10 @@ import { AccountCard } from "@/components/AccountCard";
 import { AssistantSettings } from "@/components/AssistantSettings";
 import { ChatIcon, GlobeIcon, PhoneIcon, SpeakerIcon, TextSizeIcon } from "@/components/icons";
 import { CARD, Section } from "@/components/profile/ui";
+import { UsageCard } from "@/components/profile/UsageCard";
 import { SkillsCard } from "@/components/SkillsCard";
 import { FamilyLink } from "../family/FamilyLink";
-import { useAnswers } from "@/lib/answers";
 import { updateProfile, useProfile, type FontSize } from "@/lib/profile";
-import { useSkills } from "@/lib/skills";
 import type { Lang } from "@/prompts/elderwise";
 import { TEXT } from "../copy";
 import { EditDetails, editLabel, type EditWhat } from "./EditDetails";
@@ -20,25 +19,16 @@ const FONT_ORDER: FontSize[] = ["normal", "large", "xlarge"];
 const SAMPLE_PX: Record<FontSize, number> = { normal: 19, large: 24, xlarge: 30 };
 
 const COPY: Record<Lang, {
-  asked: string;
-  scams: string;
-  skills: string;
   reading: string;
   preview: string;
   message: string;
 }> = {
   en: {
-    asked: "Recent questions",
-    scams: "Scams stopped recently",
-    skills: "AI skills",
     reading: "Reading & listening",
     preview: "This is how your text will look.",
     message: "Message",
   },
   de: {
-    asked: "Letzte Fragen",
-    scams: "Betrug zuletzt gestoppt",
-    skills: "KI gelernt",
     reading: "Lesen & Hören",
     preview: "So groß sieht Ihr Text aus.",
     message: "Nachricht",
@@ -65,14 +55,6 @@ function EditButton({ onClick, label }: { onClick: () => void; label: string }) 
   );
 }
 
-function Stat({ value, label }: { value: number; label: string }) {
-  return (
-    <div className="glass flex min-w-0 flex-col items-center justify-start gap-1.5 rounded-[20px] px-1 py-3 text-center">
-      <span className="font-serif text-3xl font-medium leading-none text-moss">{value}</span>
-      <span className="break-words text-[17px] leading-tight text-muted">{label}</span>
-    </div>
-  );
-}
 
 // One setting as a row: line icon left, label, current value right in the accent colour.
 function Row({ icon, label, value, onClick }: { icon: ReactNode; label: string; value: string; onClick: () => void }) {
@@ -89,15 +71,12 @@ function Row({ icon, label, value, onClick }: { icon: ReactNode; label: string; 
 // Profile tab: who you are, your assistant, your trusted person, reading settings and your account.
 export default function ProfilePage() {
   const profile = useProfile();
-  const answers = useAnswers();
   const t = TEXT[profile.lang];
   const c = COPY[profile.lang];
   const [editing, setEditing] = useState<EditWhat>(null);
   const relation = t.relations[profile.trusted.relation] ?? profile.trusted.relation;
   const phone = profile.trusted.phone.replace(/\s/g, "");
 
-  const scams = answers.filter((e) => e.answer.type === "warning").length;
-  const skills = useSkills().length;
 
   return (
     <main lang={profile.lang} className="mx-auto flex w-full max-w-xl flex-1 flex-col gap-6 px-4 pb-44 pt-8 min-[360px]:px-5">
@@ -111,11 +90,7 @@ export default function ProfilePage() {
           </div>
           <EditButton onClick={() => setEditing("me")} label={`${editLabel(profile.lang)}: ${profile.name}`} />
         </div>
-        <div className="grid grid-cols-3 gap-2">
-          <Stat value={answers.length} label={c.asked} />
-          <Stat value={scams} label={c.scams} />
-          <Stat value={skills} label={c.skills} />
-        </div>
+        <UsageCard lang={profile.lang} />
       </header>
 
       <SkillsCard lang={profile.lang} />
